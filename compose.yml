@@ -1,0 +1,29 @@
+services:
+  db:
+    image: postgres:16
+    container_name: db
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: zereke_db
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+  
+  backend:
+    build: ./backend
+    environment:
+      DATABASE_URL: postgres://user:password@db:5432/zereke_db
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "5173:5173"
+    
+volumes: 
+  pg_data: 
