@@ -1,12 +1,12 @@
 services:
   db:
-    image: postgres:16
+    image: postgres:15
     container_name: db
     ports:
-      - "5432:5432"
+      - "5433:5432"
     environment:
       POSTGRES_USER: user
-      POSTGRES_PASSWORD: password
+      POSTGRES_PASSWORD: secret
       POSTGRES_DB: zereke_db
     volumes:
       - pg_data:/var/lib/postgresql/data
