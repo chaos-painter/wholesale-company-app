@@ -1,17 +1,16 @@
-use axum::Router;
-use backend::handlers;
+use backend::config::Config;
+use backend::handlers::app_router;
 use backend::state::AppState;
 use sqlx::postgres::PgPoolOptions;
 use tower_http::cors::CorsLayer;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    dotenvy::dotenv().ok();
-    let database_url = std::env::var("DATABASE_URL").expect("DATABASE_URL must be set");
+    let config = Config::from_env();
 
     let pool = PgPoolOptions::new()
         .max_connections(20)
-        .connect(&database_url)
+        .connect(&config.database_url)
         .await?;
 
     sqlx::migrate!("./migrations")
@@ -20,12 +19,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .expect("Failed to run migrations");
 
     println!("🚀 Migrations applied and server starting...");
-    let state = AppState { db: pool };
 
-    let app = Router::new()
-        .nest("/api", handlers::app_router())
-        .layer(CorsLayer::permissive())
-        .with_state(state);
+    let state = AppState {
+        db: pool,
+        jwt_secret: config.jwt_secret,
+        jwt_expiry_hours: config.jwt_expiry_hours,
+    };
+
+    let app = app_router(state).layer(CorsLayer::permissive());
 
     println!("🚀 Server running on http://0.0.0.0:3000");
     let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await?;

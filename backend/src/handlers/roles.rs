@@ -1,9 +1,10 @@
+use crate::auth::jwt::Claims;
 use crate::error::AppError;
 use crate::models::roles::{CreateRole, Role, UpdateRole};
 use crate::pagination::Pagination;
 use crate::state::AppState;
 use axum::{
-    Json, Router,
+    Extension, Json, Router,
     extract::{Path, Query, State},
     http::StatusCode,
     routing::get,
@@ -15,8 +16,9 @@ pub fn router() -> Router<AppState> {
         .route("/{id}", get(get_role).put(update_role).delete(delete_role))
 }
 
-pub async fn list_roles(
+async fn list_roles(
     State(state): State<AppState>,
+    Extension(_claims): Extension<Claims>,
     Query(pagination): Query<Pagination>,
 ) -> Result<Json<Vec<Role>>, AppError> {
     let (limit, offset) = pagination.limit_offset();
@@ -29,8 +31,9 @@ pub async fn list_roles(
     Ok(Json(roles))
 }
 
-pub async fn get_role(
+async fn get_role(
     State(state): State<AppState>,
+    Extension(_claims): Extension<Claims>,
     Path(id): Path<i32>,
 ) -> Result<Json<Role>, AppError> {
     let role = sqlx::query_as::<_, Role>("SELECT id, role_name FROM roles WHERE id = $1")
@@ -40,10 +43,14 @@ pub async fn get_role(
     Ok(Json(role))
 }
 
-pub async fn create_role(
+async fn create_role(
     State(state): State<AppState>,
+    Extension(claims): Extension<Claims>,
     Json(payload): Json<CreateRole>,
 ) -> Result<(StatusCode, Json<Role>), AppError> {
+    if claims.role != "admin" {
+        return Err(AppError::new("Forbidden", StatusCode::FORBIDDEN));
+    }
     let role = sqlx::query_as::<_, Role>(
         "INSERT INTO roles (role_name) VALUES ($1) RETURNING id, role_name",
     )
@@ -53,11 +60,15 @@ pub async fn create_role(
     Ok((StatusCode::CREATED, Json(role)))
 }
 
-pub async fn update_role(
+async fn update_role(
     State(state): State<AppState>,
+    Extension(claims): Extension<Claims>,
     Path(id): Path<i32>,
     Json(payload): Json<UpdateRole>,
 ) -> Result<Json<Role>, AppError> {
+    if claims.role != "admin" {
+        return Err(AppError::new("Forbidden", StatusCode::FORBIDDEN));
+    }
     let role = sqlx::query_as::<_, Role>(
         "UPDATE roles SET role_name = COALESCE($1, role_name) WHERE id = $2 RETURNING id, role_name"
     )
@@ -68,10 +79,14 @@ pub async fn update_role(
     Ok(Json(role))
 }
 
-pub async fn delete_role(
+async fn delete_role(
     State(state): State<AppState>,
+    Extension(claims): Extension<Claims>,
     Path(id): Path<i32>,
 ) -> Result<StatusCode, AppError> {
+    if claims.role != "admin" {
+        return Err(AppError::new("Forbidden", StatusCode::FORBIDDEN));
+    }
     let rows = sqlx::query("DELETE FROM roles WHERE id = $1")
         .bind(id)
         .execute(&state.db)

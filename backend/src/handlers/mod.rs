@@ -1,24 +1,35 @@
+pub mod auth;
 pub mod categories;
+pub mod health;
 pub mod inventory;
 pub mod orders;
 pub mod roles;
 pub mod users;
 pub mod warehouses;
 
+use crate::middleware::auth::authenticate;
 use crate::state::AppState;
-use axum::{Router, routing::get};
+use axum::{Router, middleware};
 
-fn health_route() -> Router<AppState> {
-    Router::new().route("/", get(|| async { "OK" }))
-}
+pub fn app_router(state: AppState) -> Router<()> {
+    // 👈 return Router<()>
+    let auth_layer = middleware::from_fn_with_state(state.clone(), authenticate);
 
-pub fn app_router() -> Router<AppState> {
-    Router::new()
-        .nest("/health", health_route())
+    let public = Router::new()
+        .nest("/health", health::router())
+        .nest("/auth", auth::router())
+        .nest("/categories", categories::public_routes())
+        .nest("/inventory", inventory::public_routes());
+
+    let authenticated = Router::new()
         .nest("/roles", roles::router())
         .nest("/warehouses", warehouses::router())
-        .nest("/users", users::router())
-        .nest("/categories", categories::router())
-        .nest("/inventory", inventory::router())
+        .nest("/users/me", users::user_routes())
         .nest("/orders", orders::router())
+        .nest("/categories", categories::protected_routes())
+        .nest("/inventory", inventory::protected_routes())
+        .nest("/users", users::admin_routes())
+        .layer(auth_layer);
+
+    public.merge(authenticated).with_state(state)
 }

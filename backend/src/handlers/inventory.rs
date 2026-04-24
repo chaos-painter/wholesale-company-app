@@ -1,48 +1,64 @@
+use crate::auth::jwt::Claims;
 use crate::error::AppError;
-use crate::models::inventory::{CreateInventory, InventoryFilters, InventoryItem, UpdateInventory};
+use crate::models::inventory::{
+    CreateInventory, InventoryFilters, InventoryItem, InventoryItemResponse, UpdateInventory,
+};
 use crate::pagination::Pagination;
 use crate::state::AppState;
 use axum::{
-    Json, Router,
+    Extension, Json, Router,
     extract::{Path, Query, State},
     http::StatusCode,
-    routing::get,
+    routing::{get, post, put},
 };
 
-pub fn router() -> Router<AppState> {
+// Routers
+pub fn public_routes() -> Router<AppState> {
     Router::new()
-        .route("/", get(list_inventory).post(create_inventory_item))
-        .route(
-            "/{id}",
-            get(get_inventory_item)
-                .put(update_inventory_item)
-                .delete(delete_inventory_item),
-        )
+        .route("/", get(list_inventory))
+        .route("/{id}", get(get_inventory_item))
+}
+
+pub fn protected_routes() -> Router<AppState> {
+    Router::new().route("/", post(create_inventory_item)).route(
+        "/{id}",
+        put(update_inventory_item).delete(delete_inventory_item),
+    )
+}
+
+fn is_admin(claims: &Option<Claims>) -> bool {
+    claims
+        .as_ref()
+        .map_or(false, |c| c.role == "admin" || c.role == "manager")
 }
 
 pub async fn list_inventory(
     State(state): State<AppState>,
     Query(pagination): Query<Pagination>,
     Query(filters): Query<InventoryFilters>,
-) -> Result<Json<Vec<InventoryItem>>, AppError> {
+    claims: Option<Extension<Claims>>, // 👈 optional auth
+) -> Result<Json<Vec<InventoryItemResponse>>, AppError> {
     let (limit, offset) = pagination.limit_offset();
+    let admin = is_admin(&claims.map(|e| e.0));
+
+    // --- dynamic SQL building (unchanged) ---
     let mut query = String::from("SELECT * FROM inventory WHERE 1=1");
     let mut params: Vec<String> = Vec::new();
     let mut bind_idx = 1;
 
-    if let Some(_cat_id) = filters.category_id {
+    if filters.category_id.is_some() {
         params.push(format!("category_id = ${bind_idx}"));
         bind_idx += 1;
     }
-    if let Some(_wh_id) = filters.warehouse_id {
+    if filters.warehouse_id.is_some() {
         params.push(format!("warehouse_id = ${bind_idx}"));
         bind_idx += 1;
     }
-    if let Some(_min_qty) = filters.min_quantity {
+    if filters.min_quantity.is_some() {
         params.push(format!("quantity >= ${bind_idx}"));
         bind_idx += 1;
     }
-    if let Some(_search) = &filters.search {
+    if filters.search.is_some() {
         params.push(format!("item_name ILIKE ${bind_idx}"));
         bind_idx += 1;
     }
@@ -51,10 +67,11 @@ pub async fn list_inventory(
         query.push_str(" AND ");
         query.push_str(&params.join(" AND "));
     }
-    let offset_idx = bind_idx + 1; // new variable
+    let offset_idx = bind_idx + 1;
     query.push_str(&format!(
         " ORDER BY id LIMIT ${bind_idx} OFFSET ${offset_idx}"
     ));
+
     let mut query_obj = sqlx::query_as::<_, InventoryItem>(&query);
 
     if let Some(cat_id) = filters.category_id {
@@ -72,18 +89,27 @@ pub async fn list_inventory(
     query_obj = query_obj.bind(limit).bind(offset);
 
     let items = query_obj.fetch_all(&state.db).await?;
-    Ok(Json(items))
+
+    // Map to response with hiding logic
+    let response = items
+        .into_iter()
+        .map(|item| InventoryItemResponse::from_item(item, admin))
+        .collect();
+
+    Ok(Json(response))
 }
 
 pub async fn get_inventory_item(
     State(state): State<AppState>,
     Path(id): Path<i32>,
-) -> Result<Json<InventoryItem>, AppError> {
+    claims: Option<Extension<Claims>>, // 👈 optional auth
+) -> Result<Json<InventoryItemResponse>, AppError> {
+    let admin = is_admin(&claims.map(|e| e.0));
     let item = sqlx::query_as::<_, InventoryItem>("SELECT * FROM inventory WHERE id = $1")
         .bind(id)
         .fetch_one(&state.db)
         .await?;
-    Ok(Json(item))
+    Ok(Json(InventoryItemResponse::from_item(item, admin)))
 }
 
 pub async fn create_inventory_item(
