@@ -1,15 +1,15 @@
 # Step 1: Compute a recipe file for caching dependencies
-FROM lukemathwalker/cargo-chef:latest-rust-1.77 AS chef
+FROM lukemathwalker/cargo-chef:latest-rust-1.88 AS chef
 WORKDIR /app
 
 FROM chef AS planner
 COPY . .
-RUN cargo chef prepare --recipe-json recipe.json
+RUN cargo chef prepare --recipe-path recipe.json
 
 # Step 2: Build dependencies - this layer is cached unless Cargo.toml changes
 FROM chef AS builder 
 COPY --from=planner /app/recipe.json recipe.json
-RUN cargo chef cook --release --recipe-json recipe.json
+RUN cargo chef cook --release --recipe-path recipe.json
 
 # Step 3: Build the actual application
 COPY . .
