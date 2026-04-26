@@ -1,29 +1,47 @@
 services:
+
   db:
-    image: postgres:15
-    container_name: db
-    ports:
-      - "5433:5432"
+    image: postgres:16-alpine
+    restart: unless-stopped
     environment:
-      POSTGRES_USER: user
-      POSTGRES_PASSWORD: secret
-      POSTGRES_DB: zereke_db
+      POSTGRES_USER:     ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB:       ${POSTGRES_DB}
+    ports:
+      - "${POSTGRES_PORT}:5432"
     volumes:
       - pg_data:/var/lib/postgresql/data
-  
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
   backend:
     build: ./backend
+    restart: unless-stopped
     environment:
-      DATABASE_URL: postgres://user:password@db:5432/zereke_db
+      DATABASE_URL:     postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+      JWT_SECRET:       ${JWT_SECRET}
+      JWT_EXPIRY_HOURS: ${JWT_EXPIRY_HOURS}
+      RUST_LOG:         ${RUST_LOG}
     ports:
-      - "8080:8080"
+      - "${BACKEND_PORT}:3000"
     depends_on:
-      - db
+      db:
+        condition: service_healthy
 
   frontend:
-    build: ./frontend
+    build:
+      context: ./frontend
+      args:
+        VITE_API_URL: ${VITE_API_URL}
+    restart: unless-stopped
     ports:
-      - "5173:5173"
-    
-volumes: 
-  pg_data: 
+      - "${FRONTEND_PORT}:80"
+    depends_on:
+      - backend
+
+volumes:
+  pg_data:

@@ -21,7 +21,7 @@ pub fn admin_routes() -> Router<AppState> {
 }
 
 pub fn user_routes() -> Router<AppState> {
-    Router::new().route("/me", get(get_my_profile))
+    Router::new().route("/", get(get_my_profile))
 }
 
 // ---------- Admin handlers ----------

@@ -1,5 +1,5 @@
-// src/error.rs
 use axum::{
+    Json,
     http::StatusCode,
     response::{IntoResponse, Response},
 };
@@ -30,7 +30,7 @@ impl AppError {
 
 impl IntoResponse for AppError {
     fn into_response(self) -> Response {
-        (self.status, self.message).into_response()
+        (self.status, Json(serde_json::json!({ "message": self.message }))).into_response()
     }
 }
 

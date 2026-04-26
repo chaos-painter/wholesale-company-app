@@ -37,8 +37,9 @@ export default function LoginPage() {
         <form onSubmit={handleSubmit} className="auth-form">
           {error && <div className="error-banner">{error}</div>}
           <div className="form-group">
-            <label>Email</label>
+            <label htmlFor="login-email">Email</label>
             <input
+              id="login-email"
               type="email"
               value={email}
               onChange={e => setEmail(e.target.value)}
@@ -48,8 +49,9 @@ export default function LoginPage() {
             />
           </div>
           <div className="form-group">
-            <label>Пароль</label>
+            <label htmlFor="login-password">Пароль</label>
             <input
+              id="login-password"
               type="password"
               value={password}
               onChange={e => setPassword(e.target.value)}

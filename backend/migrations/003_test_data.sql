@@ -15,11 +15,11 @@ INSERT INTO categories (category)
 VALUES ('Electronics')
 ON CONFLICT (id) DO NOTHING;
 
--- Seed users (passwords are plain text – HASH THEM in production!)
+-- Passwords are bcrypt hashed (cost 12): admin123 / manager123 / customer123
 INSERT INTO users (email, password, real_name, role_id) VALUES
-  ('admin@example.com',  'admin123',  'Alice Admin',   1),
-  ('manager@example.com','manager123','Bob Manager',   2),
-  ('customer@example.com','customer123','Carol Customer',3)
+  ('admin@example.com',   '$2b$12$PBHp56EY8yhPAJmkD0xHqeB02x5FLYA81GkHWd3wVO9MgqZV8QhKe', 'Alice Admin',    1),
+  ('manager@example.com', '$2b$12$Q5nt2EovvcHFOVSomWP9QuZGsSrdJ8ZROu.G.mQXyUdPJlgN1MlM2', 'Bob Manager',    2),
+  ('customer@example.com','$2b$12$vausN18NEFGTtUUhE3aIduvzMecko62rhNH5nhRGsL/YvgMflVPIy', 'Carol Customer', 3)
 ON CONFLICT (id) DO NOTHING;
 
 -- Seed inventory items
