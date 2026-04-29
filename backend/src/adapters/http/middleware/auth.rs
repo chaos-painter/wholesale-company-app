@@ -1,10 +1,11 @@
-use crate::{auth::jwt, error::AppError, state::AppState};
 use axum::{
     extract::{Request, State},
     http::{StatusCode, header},
     middleware::Next,
     response::Response,
 };
+
+use crate::{auth::jwt, error::AppError, state::AppState};
 
 pub async fn authenticate(
     State(state): State<AppState>,

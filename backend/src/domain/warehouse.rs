@@ -1,8 +1,7 @@
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
-use sqlx::FromRow;
 
-#[derive(Serialize, FromRow)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Warehouse {
     pub id: i32,
     pub location_name: String,
@@ -12,15 +11,15 @@ pub struct Warehouse {
     pub updated_at: DateTime<Utc>,
 }
 
-#[derive(Deserialize)]
-pub struct CreateWarehouse {
+#[derive(Debug, Clone)]
+pub struct CreateWarehouseCmd {
     pub location_name: String,
     pub address: Option<String>,
     pub capacity: Option<i32>,
 }
 
-#[derive(Deserialize)]
-pub struct UpdateWarehouse {
+#[derive(Debug, Clone, Default)]
+pub struct UpdateWarehouseCmd {
     pub location_name: Option<String>,
     pub address: Option<String>,
     pub capacity: Option<i32>,

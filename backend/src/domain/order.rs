@@ -1,9 +1,8 @@
 use chrono::{DateTime, Utc};
 use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
-use sqlx::FromRow;
 
-#[derive(Serialize, FromRow)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Order {
     pub id: i32,
     pub user_id: Option<i32>,
@@ -13,7 +12,7 @@ pub struct Order {
     pub updated_at: DateTime<Utc>,
 }
 
-#[derive(Serialize, FromRow)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct OrderItem {
     pub id: i32,
     pub order_id: i32,
@@ -22,19 +21,8 @@ pub struct OrderItem {
     pub price_at_purchase: Decimal,
 }
 
-#[derive(Deserialize)]
-pub struct CreateOrder {
-    pub user_id: Option<i32>,
-    pub items: Vec<OrderItemRequest>,
-}
-
-#[derive(Deserialize)]
-pub struct OrderItemRequest {
+#[derive(Debug, Clone)]
+pub struct OrderItemInput {
     pub inventory_id: i32,
     pub quantity: i32,
-}
-
-#[derive(Deserialize)]
-pub struct UpdateOrderStatus {
-    pub status: String,
 }

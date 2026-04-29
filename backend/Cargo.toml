@@ -25,3 +25,4 @@ bcrypt = "0.15"
 uuid = { version = "1", features = ["v4"] }
 axum-extra = { version = "0.10", features = ["typed-header"] }
 tower = "0.5"
+async-trait = "0.1"
