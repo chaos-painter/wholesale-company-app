@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { listOrders, getOrder } from "../api/orders";
-import { listInventory } from "../api/inventory";
-import type { Order, OrderItem, InventoryItem } from "../types";
+import { listOrders, getOrder } from "../../api/orders";
+import { getInventoryItem } from "../../api/inventory";
+import type { Order, OrderItem, InventoryItem } from "../../types";
 
 const STATUS_LABELS: Record<string, string> = {
   pending: "Ожидает",
@@ -20,14 +20,13 @@ const STATUS_COLORS: Record<string, string> = {
   cancelled: "bg-[rgba(239,68,68,0.08)] text-[#dc2626]",
 };
 
-type OrderWithItems = {
+type OrderWithDetails = {
   order: Order;
-  items: OrderItem[];
+  items: (OrderItem & { product?: InventoryItem })[];
 };
 
 export default function OrdersPage() {
-  const [orders, setOrders] = useState<OrderWithItems[]>([]);
-  const [inventory, setInventory] = useState<InventoryItem[]>([]);
+  const [orders, setOrders] = useState<OrderWithDetails[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [expandedOrder, setExpandedOrder] = useState<number | null>(null);
@@ -38,19 +37,27 @@ export default function OrdersPage() {
 
   const loadOrders = async () => {
     try {
-      const [orderList, inventoryList] = await Promise.all([
-        listOrders(),
-        listInventory({ limit: 500 }),
-      ]);
+      const orderList = await listOrders();
 
-      setInventory(inventoryList);
-
-      // Fetch details for each order to get items
+      // Fetch details for each order to get items with product info
       const ordersWithItems = await Promise.all(
         orderList.map(async (order) => {
           try {
             const [orderData, items] = await getOrder(order.id);
-            return { order: orderData, items };
+
+            // Fetch product details for each item
+            const itemsWithProducts = await Promise.all(
+              items.map(async (item) => {
+                try {
+                  const product = await getInventoryItem(item.inventory_id);
+                  return { ...item, product };
+                } catch {
+                  return item;
+                }
+              }),
+            );
+
+            return { order: orderData, items: itemsWithProducts };
           } catch {
             return { order, items: [] };
           }
@@ -63,10 +70,6 @@ export default function OrdersPage() {
     } finally {
       setLoading(false);
     }
-  };
-
-  const getInventoryItem = (inventoryId: number) => {
-    return inventory.find((i) => i.id === inventoryId);
   };
 
   const getTotalItems = (items: OrderItem[]) => {
@@ -199,41 +202,38 @@ export default function OrdersPage() {
                   {items.length > 0 ? (
                     <div>
                       <div
-                        className="grid grid-cols-[1fr_80px_auto_auto] gap-3 px-5 py-2.5 
+                        className="grid grid-cols-[2fr_1fr_1fr_auto] gap-3 px-5 py-2.5 
                                     bg-[#c5c5c5] text-xs font-bold text-gray-400 uppercase tracking-[0.5px]"
                       >
                         <span>Товар</span>
-                        <span>SKU</span>
+                        <span>Код</span>
                         <span>Кол-во</span>
                         <span className="text-right">Сумма</span>
                       </div>
-                      {items.map((item) => {
-                        const inv = getInventoryItem(item.inventory_id);
-                        return (
-                          <div
-                            key={item.id}
-                            className="grid grid-cols-[1fr_80px_auto_auto] gap-3 px-5 py-2.5 
-                                       border-b border-gray-200 last:border-b-0 text-sm items-center"
-                          >
-                            <span className="text-[#1a1a1a] truncate font-medium">
-                              {inv?.item_name ?? `Товар #${item.inventory_id}`}
-                            </span>
-                            <span className="text-gray-400 text-xs">
-                              {inv?.sku ?? "—"}
-                            </span>
-                            <span className="text-[#1a1a1a]">
-                              {item.quantity} шт.
-                            </span>
-                            <span className="text-[#1a1a1a] text-right font-medium">
-                              {(
-                                parseFloat(item.price_at_purchase) *
-                                item.quantity
-                              ).toFixed(2)}{" "}
-                              ₸
-                            </span>
-                          </div>
-                        );
-                      })}
+                      {items.map((item, index) => (
+                        <div
+                          key={item.id ?? index}
+                          className="grid grid-cols-[2fr_1fr_1fr_auto] gap-3 px-5 py-2.5 
+                                     border-b border-gray-200 last:border-b-0 text-sm"
+                        >
+                          <span className="text-[#1a1a1a] truncate">
+                            {item.product?.item_name ??
+                              `Товар #${item.inventory_id}`}
+                          </span>
+                          <span className="text-gray-400 truncate text-xs">
+                            {item.product?.sku ?? "—"}
+                          </span>
+                          <span className="text-[#1a1a1a]">
+                            {item.quantity} шт.
+                          </span>
+                          <span className="text-[#1a1a1a] text-right font-medium">
+                            {(
+                              parseFloat(item.price_at_purchase) * item.quantity
+                            ).toFixed(2)}{" "}
+                            ₸
+                          </span>
+                        </div>
+                      ))}
                     </div>
                   ) : (
                     <div className="px-5 py-4 text-sm text-gray-400">
