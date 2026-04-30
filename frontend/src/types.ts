@@ -1,7 +1,7 @@
 export interface User {
   id: number;
   email: string;
-  real_name?: string | null | undefined;
+  real_name?: string | null;
   role_id: number;
   created_at: string;
   updated_at: string;
@@ -20,22 +20,22 @@ export interface Category {
 export interface InventoryItem {
   id: number;
   item_name: string;
-  description?: string | null | undefined;
+  description?: string | null;
   sku?: string | null;
-  cost_price?: string | null | undefined;
+  cost_price?: string | null;
   unit_price: string;
   quantity: number;
-  category_id?: number | null | undefined;
-  warehouse_id?: number | null | undefined;
+  category_id?: number | null;
+  warehouse_id?: number | null;
   created_at: string;
   updated_at: string;
 }
 
 export interface Order {
   id: number;
-  user_id?: number | null | undefined;
+  user_id?: number | null;
   status: string;
-  total_amount?: string | null | undefined;
+  total_amount?: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -51,8 +51,8 @@ export interface OrderItem {
 export interface Warehouse {
   id: number;
   location_name: string;
-  address?: string | null | undefined;
-  capacity?: number | null | undefined;
+  address?: string | null;
+  capacity?: number | null;
   created_at: string;
   updated_at: string;
 }

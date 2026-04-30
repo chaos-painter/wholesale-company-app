@@ -1,6 +1,10 @@
 import { useState, type FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { register } from "../api/auth";
+import Button from "../components/ui/Button";
+import Input from "../components/ui/Input";
+import ErrorBanner from "../components/ui/ErrorBanner";
+import AuthLayout from "../components/layouts/AuthLayout";
 
 export default function RegisterPage() {
   const [email, setEmail] = useState("");
@@ -25,101 +29,47 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-[calc(100vh-60px)] flex items-center justify-center p-6">
-      <div className="w-full max-w-105 bg-[#dadada] border border-gray-200 rounded-2xl p-10 px-9 shadow-md">
-        {/* Header */}
+    <AuthLayout>
+      <div className="w-full max-w-[420px] bg-[#dadada] border border-gray-200 rounded-2xl p-10 px-9 shadow-md">
         <div className="text-center mb-7 flex flex-col items-center gap-3">
-          <div className="w-12 h-12 rounded-xl bg-[#1a1a1a] text-[#e5e5e5] flex items-center justify-center font-extrabold text-2xl">
-            W
-          </div>
-          <h1 className="text-2xl text-[#1a1a1a]">WholesalePro</h1>
+          <h1 className="text-2xl text-[#1a1a1a]">Zereke</h1>
           <p className="text-gray-400 text-sm">Создайте аккаунт покупателя</p>
         </div>
 
-        {/* Form */}
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4.5">
-          {error && (
-            <div className="py-2.5 px-3.5 bg-[rgba(239,68,68,0.08)] border border-[rgba(239,68,68,0.2)] rounded-lg text-[#dc2626] text-sm">
-              {error}
-            </div>
-          )}
-
-          <div className="flex flex-col gap-1.5">
-            <label
-              htmlFor="reg-name"
-              className="text-[13px] font-semibold text-[#1a1a1a]"
-            >
-              Имя
-            </label>
-            <input
-              id="reg-name"
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Иван Иванов"
-              required
-              autoFocus
-              className="px-3 py-2 border border-gray-300 rounded-lg bg-[#c5c5c5] text-[#1a1a1a] text-sm
-                         placeholder:text-gray-400
-                         focus:outline-none focus:border-[#1a1a1a] focus:shadow-[0_0_0_3px_rgba(0,0,0,0.05)]
-                         transition-colors"
-            />
-          </div>
-
-          <div className="flex flex-col gap-1.5">
-            <label
-              htmlFor="reg-email"
-              className="text-[13px] font-semibold text-[#1a1a1a]"
-            >
-              Email
-            </label>
-            <input
-              id="reg-email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="you@example.com"
-              required
-              className="px-3 py-2 border border-gray-300 rounded-lg bg-[#c5c5c5] text-[#1a1a1a] text-sm
-                         placeholder:text-gray-400
-                         focus:outline-none focus:border-[#1a1a1a] focus:shadow-[0_0_0_3px_rgba(0,0,0,0.05)]
-                         transition-colors"
-            />
-          </div>
-
-          <div className="flex flex-col gap-1.5">
-            <label
-              htmlFor="reg-password"
-              className="text-[13px] font-semibold text-[#1a1a1a]"
-            >
-              Пароль
-            </label>
-            <input
-              id="reg-password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="Минимум 8 символов"
-              required
-              minLength={6}
-              className="px-3 py-2 border border-gray-300 rounded-lg bg-[#c5c5c5] text-[#1a1a1a] text-sm
-                         placeholder:text-gray-400
-                         focus:outline-none focus:border-[#1a1a1a] focus:shadow-[0_0_0_3px_rgba(0,0,0,0.05)]
-                         transition-colors"
-            />
-          </div>
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="inline-flex items-center justify-center gap-1.5 px-4.5 py-2 rounded-lg
-                       bg-[#1a1a1a] text-[#e5e5e5] font-semibold text-sm w-full
-                       hover:bg-[#333] active:scale-[0.98]
-                       disabled:opacity-55 disabled:cursor-not-allowed
-                       transition-all duration-200"
-          >
-            {loading ? "Создание..." : "Зарегистрироваться"}
-          </button>
+        <form onSubmit={handleSubmit} className="flex flex-col gap-[18px]">
+          {error && <ErrorBanner message={error} />}
+          <Input
+            id="reg-name"
+            label="Имя"
+            type="text"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="Иван Иванов"
+            required
+            autoFocus
+          />
+          <Input
+            id="reg-email"
+            label="Email"
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="you@example.com"
+            required
+          />
+          <Input
+            id="reg-password"
+            label="Пароль"
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="Минимум 8 символов"
+            required
+            minLength={6}
+          />
+          <Button type="submit" fullWidth disabled={loading} loading={loading}>
+            Зарегистрироваться
+          </Button>
         </form>
 
         <p className="text-center mt-5 text-sm text-gray-400">
@@ -132,6 +82,6 @@ export default function RegisterPage() {
           </Link>
         </p>
       </div>
-    </div>
+    </AuthLayout>
   );
 }
