@@ -18,6 +18,7 @@ export function useCategories(): UseCategoriesReturn {
 
   const loadCategories = useCallback(async () => {
     setLoading(true)
+    setError(null)
     try {
       const data = await listCategories()
       setCategories(data)
@@ -29,14 +30,26 @@ export function useCategories(): UseCategoriesReturn {
   }, [])
 
   const addCategory = useCallback(async (name: string) => {
-    await createCategory(name)
-    await loadCategories()
-  }, [loadCategories])
+    setError(null)
+    try {
+      const newCategory = await createCategory(name)
+      setCategories((prev) => [...prev, newCategory])
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Ошибка создания категории')
+      throw err
+    }
+  }, [])
 
   const removeCategory = useCallback(async (id: number) => {
-    await deleteCategory(id)
-    await loadCategories()
-  }, [loadCategories])
+    setError(null)
+    try {
+      await deleteCategory(id)
+      setCategories((prev) => prev.filter((c) => c.id !== id))
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Ошибка удаления категории')
+      throw err
+    }
+  }, [])
 
   useEffect(() => {
     loadCategories()

@@ -1,13 +1,12 @@
 import { useEffect, useState } from "react";
-import { listInventory } from "../api/inventory";
-import { listCategories } from "../api/categories";
+import { useInventory } from "../hooks/useInventory";
+import { useCategories } from "../hooks/useCategories";
 import ProductCard from "../components/ui/ProductCard";
 import EmptyState from "../components/ui/EmptyState";
 import ErrorBanner from "../components/ui/ErrorBanner";
 import LoadingSkeleton from "../components/ui/LoadingSkeleton";
 import MainLayout from "../components/layouts/MainLayout";
 import { Search } from "lucide-react";
-import type { InventoryItem, Category } from "../types";
 
 const categoryButtonClasses = (isActive: boolean) =>
   `w-full text-left px-2.5 py-2 rounded-md text-sm transition-colors
@@ -16,26 +15,17 @@ const categoryButtonClasses = (isActive: boolean) =>
    max-md:w-auto`;
 
 export default function CatalogPage() {
-  const [items, setItems] = useState<InventoryItem[]>([]);
-  const [categories, setCategories] = useState<Category[]>([]);
+  const { items, loading, error, loadItems } = useInventory();
+  const { categories, loadCategories } = useCategories();
   const [search, setSearch] = useState("");
   const [categoryId, setCategoryId] = useState<number | undefined>();
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
 
   useEffect(() => {
-    listCategories()
-      .then(setCategories)
-      .catch(() => {});
+    loadCategories();
   }, []);
 
   useEffect(() => {
-    setLoading(true);
-    setError("");
-    listInventory({ search: search || undefined, category_id: categoryId })
-      .then(setItems)
-      .catch((err) => setError(err.message))
-      .finally(() => setLoading(false));
+    loadItems({ search: search || undefined, category_id: categoryId });
   }, [search, categoryId]);
 
   return (

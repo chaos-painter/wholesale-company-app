@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { listWarehouses, createWarehouse, updateWarehouse, deleteWarehouse } from '../api/warehouses'
 import type { Warehouse } from '../types'
 
@@ -7,8 +7,8 @@ interface UseWarehousesReturn {
   loading: boolean
   error: string | null
   loadWarehouses: () => Promise<void>
-  addWarehouse: (data: { location_name: string; address?: string; capacity?: number }) => Promise<void>
-  updateWarehouse: (id: number, data: { location_name?: string; address?: string; capacity?: number }) => Promise<void>
+  addWarehouse: (data: Partial<Warehouse>) => Promise<void>
+  updateWarehouse: (id: number, data: Partial<Warehouse>) => Promise<void>
   removeWarehouse: (id: number) => Promise<void>
 }
 
@@ -30,20 +30,34 @@ export function useWarehouses(): UseWarehousesReturn {
     }
   }, [])
 
-  const addWarehouse = useCallback(async (data: { location_name: string; address?: string; capacity?: number }) => {
+  const addWarehouse = useCallback(async (data: Partial<Warehouse>) => {
     await createWarehouse(data)
     await loadWarehouses()
   }, [loadWarehouses])
 
-  const updateWarehouse = useCallback(async (id: number, data: { location_name?: string; address?: string; capacity?: number }) => {
+  const updateWarehouseHandler = useCallback(async (id: number, data: Partial<Warehouse>) => {
     await updateWarehouse(id, data)
-    await loadWarehouses()
-  }, [loadWarehouses])
+    setWarehouses((prev) =>
+      prev.map((w) => (w.id === id ? { ...w, ...data } : w))
+    )
+  }, [])
 
   const removeWarehouse = useCallback(async (id: number) => {
     await deleteWarehouse(id)
-    await loadWarehouses()
+    setWarehouses((prev) => prev.filter((w) => w.id !== id))
+  }, [])
+
+  useEffect(() => {
+    loadWarehouses()
   }, [loadWarehouses])
 
-  return { warehouses, loading, error, loadWarehouses, addWarehouse, updateWarehouse, removeWarehouse }
+  return {
+    warehouses,
+    loading,
+    error,
+    loadWarehouses,
+    addWarehouse,
+    updateWarehouse: updateWarehouseHandler,
+    removeWarehouse,
+  }
 }

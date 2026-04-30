@@ -39,18 +39,23 @@ export default function WarehousesTab() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
-    const data = {
-      location_name: form.location_name,
-      address: form.address || undefined,
-      capacity: form.capacity ? Number(form.capacity) : undefined,
-    };
-    if (editingId) {
-      await updateWarehouse(editingId, data).catch(() => {});
-    } else {
-      await addWarehouse(data).catch(() => {});
+    try {
+      const data = {
+        location_name: form.location_name,
+        address: form.address || undefined,
+        capacity: form.capacity ? Number(form.capacity) : undefined,
+      };
+      if (editingId) {
+        await updateWarehouse(editingId, data);
+      } else {
+        await addWarehouse(data);
+      }
+      resetForm();
+    } catch {
+      // error handled by hook
+    } finally {
+      setSaving(false);
     }
-    resetForm();
-    setSaving(false);
   };
 
   const handleDelete = async (id: number) => {
