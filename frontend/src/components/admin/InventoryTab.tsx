@@ -225,7 +225,7 @@ export default function InventoryTab() {
             >
               <span>{item.item_name}</span>
               <span className="text-gray-400">{item.sku ?? "—"}</span>
-              <span>{parseFloat(String(item.unit_price)).toFixed(2)} ₽</span>
+              <span>{parseFloat(String(item.unit_price)).toFixed(2)} ₸</span>
               <span>{item.quantity}</span>
               <span>
                 {categories.find((c) => c.id === item.category_id)?.category ??

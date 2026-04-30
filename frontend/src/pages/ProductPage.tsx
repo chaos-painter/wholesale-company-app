@@ -100,7 +100,7 @@ export default function ProductPage() {
               <div className="flex flex-col gap-0.5">
                 <span className="text-xs text-gray-400">Цена за единицу</span>
                 <span className="text-[30px] font-bold text-[#1a1a1a]">
-                  {parseFloat(item.unit_price).toFixed(2)} ₽
+                  {parseFloat(item.unit_price).toFixed(2)} ₸
                 </span>
               </div>
               <StatusBadge
@@ -165,7 +165,7 @@ export default function ProductPage() {
 
             {item.cost_price && (
               <p className="text-xs text-gray-400 mt-2">
-                Себестоимость: {parseFloat(item.cost_price).toFixed(2)} ₽
+                Себестоимость: {parseFloat(item.cost_price).toFixed(2)} ₸
               </p>
             )}
           </div>

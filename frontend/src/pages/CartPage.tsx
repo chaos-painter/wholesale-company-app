@@ -84,7 +84,7 @@ export default function CartPage() {
                     </span>
                   )}
                   <span className="text-[13px] text-gray-400">
-                    {parseFloat(item.unit_price).toFixed(2)} ₽ / шт.
+                    {parseFloat(item.unit_price).toFixed(2)} ₸ / шт.
                   </span>
                 </div>
                 <div className="flex items-center border border-gray-300 rounded-lg overflow-hidden">
@@ -110,7 +110,7 @@ export default function CartPage() {
                   </button>
                 </div>
                 <span className="font-bold text-[#1a1a1a] min-w-20 text-right">
-                  {(parseFloat(item.unit_price) * quantity).toFixed(2)} ₽
+                  {(parseFloat(item.unit_price) * quantity).toFixed(2)} ₸
                 </span>
                 <button
                   onClick={() => remove(item.id)}
@@ -131,7 +131,7 @@ export default function CartPage() {
             <div className="flex justify-between items-center pt-3 border-t border-gray-200 text-[15px]">
               <span className="text-gray-400">Сумма заказа</span>
               <strong className="text-xl text-[#1a1a1a]">
-                {total.toFixed(2)} ₽
+                {total.toFixed(2)} ₸
               </strong>
             </div>
             <Button
